@@ -1,0 +1,9 @@
+load('images')
+for i = 1:10
+    for m = 1:56
+        for n = 1:56
+            images_lr(n,m,i) = mean(mean(images((3*n-2:3*n),(3*m-2:3*m))));
+        end
+    end
+end
+save('images_lr','images_lr')
