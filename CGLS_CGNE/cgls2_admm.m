@@ -22,7 +22,7 @@ it = 1;
 gamma = dot(s,s);
 tol = eps*sqrt(gamma);
 X = [];
-while ( sqrt(gamma) > tol & it <= m_iter)
+while it <= m_iter%( sqrt(gamma) > tol & it <= m_iter)
 
    xi = dot(Ap,CAp) + a*dot(p,Rp);
    alpha = gamma/xi;

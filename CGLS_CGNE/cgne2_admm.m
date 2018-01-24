@@ -30,7 +30,7 @@ gamma = dot(s,s);
 tol = eps*sqrt(gamma);
 
 X = [];
-while ( sqrt(gamma) > tol & it <= m_iter )
+while it <= m_iter %( sqrt(gamma) > tol & it <= m_iter )
    tic 
    xi = dot(q,Rq) + lambda*dot(p,Cp);
 %    xi = 1/lambda*dot(q,Rq) + dot(p,Cp);

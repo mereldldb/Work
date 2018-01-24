@@ -61,6 +61,9 @@ sigma = 1e-9;%0.14e-10 * sqrt(bw_pulse); % standard deviation
 
 %sigma = 2e-9*sqrt(bw_pulse);
 A = generate_matrix2(yy, zz, BB, gamma, fc_pulse, bw_pulse, angles, npx, FoV, t_rec );
+scaling_factor = norm(A,'fro');
+A = A/scaling_factor;
+sigma = sigma/scaling_factor;
 [m,n] = size(A);
 % Noise vector:
 rng(0);
@@ -75,11 +78,11 @@ disp(['Number of pixels = ',num2str(n)]);
 d = A*x_mod;
 b = d + db;
 
-lambda = 1e-17;
+lambda = 1e-5;
 tol_fp = 1e-100;
-iter_fp = 20;
+iter_fp = 30;
 tol_CG = 1e-15;
-iter_CG = 1000;
+iter_CG = 100;
 tol_admm = 1e-20;
 iter_admm = 100;
 
@@ -94,7 +97,7 @@ R_hr = F_hr'*F_hr;
 
 % R_hr = speye(length(x_mod));
 
-lambda2 = 1e-15;
+lambda2 = 1e-4;
 [x_cgls2, res1_cgls, res2_cgls, err2_cgls, obj2_cgls] = cgls(A,b,zeros(length(x_mod),1),speye(length(x_mod)),speye(length(b)),R_hr,iter_CG,tol_CG,lambda2,x_mod,1);
 [x_cgne2, r_cgne2, res1_cgne, res2_cgne, err2_cgne, obj2_cgne] = cgne(A,b,zeros(length(b),1),speye(length(b)),speye(length(b)),R_hr,iter_CG,tol_CG,lambda2,x_mod,1);
 
@@ -118,7 +121,7 @@ figure
 % hold on;
 % xlabel('Number of ITERATIONS')
 % ylabel('log_{10} |s_k|')
-% %title('Residual norm normal 6equations');
+% %title('Residual norm normal equations');
 % grid on;
 % plot(log10(res2_cgls/res2_cgls(1)),'b','LineWidth',2);
 % plot(log10(abs(res2_cgne/res2_cgne(1))),'r--','LineWidth',2);
@@ -129,7 +132,7 @@ figure
 
 subplot(1,2,1)
 hold on 
-xlabel('Number of ITERATIONS')
+xlabel('Number of iterations')
 ylabel('Objective value')
 %title('Relative Error');
 grid on;
@@ -138,12 +141,13 @@ plot(obj2_cgne,'r--','LineWidth',2);
 %plot(log10(enrm_cgls2),'g','LineWidth',2);
 %plot(log10(enrm_cgne2),'k--','LineWidth',2);
 legend('CGLS','CGNE');
-axis([0 50 0 1e-12])
+% axis([0 50 0 1e-12])
+set(gca,'FontSize',14)
 hold off;
 
 subplot(1,2,2);
 hold on;
-xlabel('Number of ITERATIONS')
+xlabel('Number of iterations')
 ylabel('Error')
 %title('Relative Error');
 grid on;
@@ -152,8 +156,10 @@ plot(err2_cgne,'r--','LineWidth',2);
 %plot(log10(enrm_cgls2),'g','LineWidth',2);
 %plot(log10(enrm_cgne2),'k--','LineWidth',2);
 legend('CGLS','CGNE');
-axis([0 50 0 30])
+% axis([0 50 0 30])
+set(gca,'FontSize',14)
 hold off;
+
 
 %%
 [x_cgls, rnrm_cgls, snrm_cgls, enrm_cgls, obj_cgls] = cs_cgls(A,b,speye(length(x_mod)),speye(length(b)),F_hr,iter_fp,tol_fp,iter_CG,tol_CG,lambda,x_mod);
@@ -168,7 +174,7 @@ figure
 
 subplot(1,2,1)
 hold on
-xlabel('Number of ITERATIONS')
+xlabel('Number of iterations')
 ylabel('log_{10}(Objective value)')
 %title('Relative Error');
 grid on;
@@ -184,11 +190,12 @@ for k = 1:iter_fp-1
 end
 xlim([0 iter_CG*iter_fp])
 legend('CGLS','CGNE');
+set(gca,'FontSize',14)
 hold off;
 
 subplot(1,2,2);
 hold on;
-xlabel('Number of ITERATIONS')
+xlabel('Number of iterations')
 ylabel('log_{10}(Error)')
 %title('Relative Error');
 grid on;
@@ -196,7 +203,7 @@ grid on;
 %plot(log10(enrm_cgne2),'k--','LineWidth',2);
 for k = 1:iter_fp
     plot((k-1)*iter_CG+1:k*iter_CG,log10(enrm_cgls((k-1)*iter_CG+1:k*iter_CG)),'b','LineWidth',2);
-    plot(((k-1)*iter_CG1:k*iter_CG,log10(enrm_cgne((k-1)*iter_CG+1:k*iter_CG)),'r--','LineWidth',2);
+    plot((k-1)*iter_CG+1:k*iter_CG,log10(enrm_cgne((k-1)*iter_CG+1:k*iter_CG)),'r--','LineWidth',2);
 end
 y1=get(gca,'ylim');
 for k = 1:iter_fp-1
@@ -204,13 +211,14 @@ for k = 1:iter_fp-1
 end
 xlim([0 iter_CG*iter_fp])
 legend('CGLS','CGNE');
+set(gca,'FontSize',14)
 hold off;
 
 %%
-iter_CG2 = 100;
-
-[x_admm, err_admm, obj_admm] = admm_tv(A,real(b),sparse(npx^2,1),speye(length(b)),speye(length(b)),R_hr,F_hr,iter_admm,tol_admm,iter_CG2,tol_CG,lambda,10*lambda,x_mod);
-[x_admm2, err_admm2, obj_admm2] = admm_tv_2(A,real(b),sparse(length(b),1),speye(length(b)),speye(length(b)),R_hr,F_hr,iter_admm,tol_admm,iter_CG2,tol_CG,lambda,100*lambda,x_mod);
+iter_CG2 = 200;
+iter_admm = 100;
+[x_admm, err_admm, obj_admm] = admm_tv(A,b,sparse(npx^2,1),speye(length(b)),speye(length(b)),R_hr,F_hr,iter_admm,tol_admm,iter_CG2,tol_CG,lambda,10*lambda,x_mod);
+% [x_admm2, err_admm2, obj_admm2] = admm_tv_2(A,b,sparse(length(b),1),speye(length(b)),speye(length(b)),R_hr,F_hr,iter_admm,tol_admm,iter_CG2,tol_CG,lambda,100*lambda,x_mod);
 
 %%
 figure

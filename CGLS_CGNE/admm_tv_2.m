@@ -6,7 +6,7 @@ it = 0;
 enrm = [];
 obj2 = [];
 x0 = zeros(size(A,2),1);
-while (dif > tol_admm && it < iter_admm)
+while it < iter_admm %(dif > tol_admm && it < iter_admm)
     it = it+1;
     [X, r0, ~, ~, err] = cgne2_admm(A, b, r0, P, C, R, F, iter_CG, tol_CG, a, x_mod, u, v);
 %     y = pcg(a*C+A*(R\(A')),b-A*(R\(F'*(u-v))));
@@ -14,11 +14,11 @@ while (dif > tol_admm && it < iter_admm)
     x = X(:,end);
     v = wthresh(F*x+u,'s',lambda/a);
     u = u+F*x-v;
-    %dif = norm(x - x0);
+    %dif = norm(x - x0);3
     x0 = x;
     enrm = [enrm err];
     for k = 1:size(X,2)
-        obj(k) = 1/2*norm(b-A*X(:,k))^2+1/2*lambda*sum(abs(F*X(:,k)));
+        obj(k) = 1/2*abs((b-A*X(:,k))'*(C\(b-A*X(:,k))))+1/2*lambda*sum(abs(F*X(:,k)));
     end
     obj2 = [obj2 obj];
 end
